@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import neilt.mobile.android.app.ui.theme.ExampleOfRecommendationsTheme
+import java.util.UUID
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
 }
 
 data class RecommendationItemData(
+    val id: UUID = UUID.randomUUID(),
     val name: String,
     var isLiked: Boolean = false,
 )
@@ -55,7 +57,7 @@ fun RecommendationScreen() {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                items = generateRandomItemList(20)
+                items = generateRandomItemList(likedLetters.toList().sortedByDescending { it.second }.map { it.first })
             }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh Items")
             }
@@ -68,7 +70,7 @@ fun RecommendationScreen() {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items.size, key = { items[it].name }) { index ->
+            items(items.size, key = { items[it].id }) { index ->
                 val item = items[index]
 
                 RecommendationItem(item = item) { isChecked ->
@@ -124,11 +126,23 @@ fun RecommendationScreenPreview() {
     RecommendationScreen()
 }
 
-private fun generateRandomString(length: Int = 8): String {
+private fun generateRandomString(popularLetters: List<Char> = emptyList()): String {
+    val length = 8
     val chars = ('A'..'Z') + ('a'..'z')
-    return (1..length).map { chars.random() }.joinToString("")
+    val randomPart = (1..length).map { chars.random() }.joinToString("")
+
+    val lettersToAdd = popularLetters.take(length).joinToString("")
+    return (lettersToAdd + randomPart).take(length)
 }
 
-private fun generateRandomItemList(size: Int = 20): List<RecommendationItemData> {
-    return List(size) { RecommendationItemData(generateRandomString()) }
+private fun generateRandomItemList(popularLetters: List<Char> = emptyList()): List<RecommendationItemData> {
+    val allItems = List(20) {
+        RecommendationItemData(name = generateRandomString())
+    }
+
+    val sortedItems = allItems.sortedByDescending { item ->
+        item.name.count { it in popularLetters }
+    }
+
+    return sortedItems
 }
