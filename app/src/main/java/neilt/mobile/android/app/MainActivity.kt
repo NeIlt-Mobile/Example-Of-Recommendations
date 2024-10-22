@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,32 +34,39 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             ExampleOfRecommendationsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        val exampleList = remember { List(20) { generateRandomString(8) } }
-                        RecommendationScreen(exampleList)
-                    }
-                }
+                RecommendationScreen()
             }
         }
     }
 }
 
 @Composable
-fun RecommendationScreen(
-    items: List<String>,
-) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(items.size) { index ->
-            val itemName = items[index]
-            var isLiked by remember { mutableStateOf(false) }
+fun RecommendationScreen() {
+    var items by remember { mutableStateOf(generateRandomItemList()) }
 
-            RecommendationItem(name = itemName, isLiked = isLiked) { isChecked ->
-                isLiked = isChecked
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                items = generateRandomItemList(20)
+            }) {
+                Icon(Icons.Default.Refresh, contentDescription = "Refresh Items")
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(items.size) { index ->
+                val itemName = items[index]
+                var isLiked by remember { mutableStateOf(false) }
+
+                RecommendationItem(name = itemName, isLiked = isLiked) { isChecked ->
+                    isLiked = isChecked
+                }
             }
         }
     }
@@ -81,11 +91,14 @@ fun RecommendationItem(name: String, isLiked: Boolean, onCheckedChange: (Boolean
 @Preview(showBackground = true)
 @Composable
 fun RecommendationScreenPreview() {
-    val randomItems = List(20) { generateRandomString(8) }
-    RecommendationScreen(items = randomItems)
+    RecommendationScreen()
 }
 
-private fun generateRandomString(length: Int): String {
+private fun generateRandomString(length: Int = 8): String {
     val chars = ('A'..'Z') + ('a'..'z')
     return (1..length).map { chars.random() }.joinToString("")
+}
+
+private fun generateRandomItemList(size: Int = 20): List<String> {
+    return List(size) { generateRandomString() }
 }
