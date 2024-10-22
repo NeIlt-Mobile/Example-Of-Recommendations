@@ -42,6 +42,11 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+data class RecommendationItemData(
+    val name: String,
+    var isLiked: Boolean = false,
+)
+
 @Composable
 fun RecommendationScreen() {
     var items by remember { mutableStateOf(generateRandomItemList()) }
@@ -63,18 +68,20 @@ fun RecommendationScreen() {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items.size) { index ->
-                val itemName = items[index]
-                var isLiked by remember { mutableStateOf(false) }
+            items(items.size, key = { items[it].name }) { index ->
+                val item = items[index]
 
-                RecommendationItem(name = itemName, isLiked = isLiked) { isChecked ->
-                    isLiked = isChecked
+                RecommendationItem(item = item) { isChecked ->
+                    items = items.toMutableList().apply {
+                        this[index] = item.copy(isLiked = isChecked)
+                    }
+
                     if (isChecked) {
-                        itemName.forEach { letter ->
+                        item.name.forEach { letter ->
                             likedLetters[letter] = likedLetters.getOrDefault(letter, 0) + 1
                         }
                     } else {
-                        itemName.forEach { letter ->
+                        item.name.forEach { letter ->
                             val currentCount = likedLetters[letter] ?: 0
                             if (currentCount > 1) {
                                 likedLetters[letter] = currentCount - 1
@@ -96,16 +103,16 @@ fun RecommendationScreen() {
 }
 
 @Composable
-fun RecommendationItem(name: String, isLiked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun RecommendationItem(item: RecommendationItemData, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        BasicText(text = name)
+        BasicText(text = item.name)
         Checkbox(
-            checked = isLiked,
+            checked = item.isLiked,
             onCheckedChange = onCheckedChange
         )
     }
@@ -122,6 +129,6 @@ private fun generateRandomString(length: Int = 8): String {
     return (1..length).map { chars.random() }.joinToString("")
 }
 
-private fun generateRandomItemList(size: Int = 20): List<String> {
-    return List(size) { generateRandomString() }
+private fun generateRandomItemList(size: Int = 20): List<RecommendationItemData> {
+    return List(size) { RecommendationItemData(generateRandomString()) }
 }
