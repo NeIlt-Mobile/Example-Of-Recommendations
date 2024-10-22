@@ -140,8 +140,14 @@ private fun generateRandomItemList(popularLetters: List<Char> = emptyList()): Li
         RecommendationItemData(name = generateRandomString())
     }
 
+    val mostPopularLetter = popularLetters.firstOrNull()
+
     val sortedItems = allItems.sortedByDescending { item ->
-        item.name.count { it in popularLetters }
+        if (mostPopularLetter != null) {
+            item.name.count { it == mostPopularLetter }
+        } else {
+            item.name.count { it in popularLetters }
+        }
     }
 
     return sortedItems
