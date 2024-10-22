@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun RecommendationScreen() {
     var items by remember { mutableStateOf(generateRandomItemList()) }
+    val likedLetters = remember { mutableStateMapOf<Char, Int>() }
 
     Scaffold(
         floatingActionButton = {
@@ -66,8 +69,28 @@ fun RecommendationScreen() {
 
                 RecommendationItem(name = itemName, isLiked = isLiked) { isChecked ->
                     isLiked = isChecked
+                    if (isChecked) {
+                        itemName.forEach { letter ->
+                            likedLetters[letter] = likedLetters.getOrDefault(letter, 0) + 1
+                        }
+                    } else {
+                        itemName.forEach { letter ->
+                            val currentCount = likedLetters[letter] ?: 0
+                            if (currentCount > 1) {
+                                likedLetters[letter] = currentCount - 1
+                            } else {
+                                likedLetters.remove(letter)
+                            }
+                        }
+                    }
                 }
             }
+        }
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        likedLetters.forEach { (letter, count) ->
+            BasicText(text = "Letter: $letter, Count: $count")
         }
     }
 }
